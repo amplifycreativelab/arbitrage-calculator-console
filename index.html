@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Arbitrage calculator for 2-way betting with live EUR FX rate conversion. Calculate optimal stakes, exposure, and guaranteed returns across multiple currencies." />
+    <title>Surebet Ops Console | Arbitrage Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+    <meta name="theme-color" content="#0a0f1f" />
+    
+    <!-- Preload fonts for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+
+</head>
+
+<body>
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="app-shell">
+        <!-- HEADER -->
+        <header class="header-card glass-card" role="banner">
+            <div class="header-main">
+                <h1>Arbitrage Calculator</h1>
+                <p class="tagline">2-way arbitrage sizing with live EUR FX snapshot</p>
+            </div>
+            <div class="fx-fetch-block" role="region" aria-label="FX Rate Controls">
+                <button 
+                    id="fetchRatesBtn" 
+                    class="btn-primary"
+                    aria-describedby="fetchHint fetchStatus"
+                >
+                    Fetch Rates (EUR base)
+                </button>
+                <div id="fetchHint" class="fetch-hint">
+                    Snapshot once per 24h for accounting.
+                </div>
+                <div 
+                    id="fetchStatus" 
+                    class="status-msg" 
+                    role="status" 
+                    aria-live="polite"
+                    aria-atomic="true"
+                ></div>
+            </div>
+        </header>
+
+        <main id="main-content" class="main-col" role="main">
+            <!-- ================= FX SNAPSHOT (SEMANTIC TABLE) ================= -->
+            <section 
+                class="glass-card panel panel-compact" 
+                aria-labelledby="fxTitle"
+                role="region"
+            >
+                <div class="panel-head-row">
+                    <h2 id="fxTitle" class="panel-title small-gap">FX Snapshot (EUR →)</h2>
+                    <div id="fxTimestamp" class="fx-timestamp tiny-ts" aria-live="polite">No rates loaded</div>
+                </div>
+
+                <div id="fxTable" class="fx-table" role="table" aria-label="Foreign exchange rates">
+                    <!-- Populated by JS as semantic table -->
+                </div>
+
+                <details class="manual-wrapper">
+                    <summary 
+                        class="manual-summary"
+                        aria-expanded="false"
+                    >
+                        Manual rates override
+                        <span class="manual-hint">(use if API blocked)</span>
+                    </summary>
+
+                    <div class="inline-manual" role="form" aria-label="Manual FX rate entry">
+                        <div class="manual-row tight-row">
+                            <label for="manualGBP">1€ =</label>
+                            <input 
+                                type="number" 
+                                step="0.0001" 
+                                id="manualGBP" 
+                                placeholder="GBP"
+                                aria-describedby="manualHint"
+                            />
+                            <span class="manual-cur">GBP</span>
+                        </div>
+                        <div class="manual-row tight-row">
+                            <label for="manualRON">1€ =</label>
+                            <input 
+                                type="number" 
+                                step="0.0001" 
+                                id="manualRON" 
+                                placeholder="RON"
+                                aria-describedby="manualHint"
+                            />
+                            <span class="manual-cur">RON</span>
+                        </div>
+                        <div class="manual-row tight-row">
+                            <label for="manualAUD">1€ =</label>
+                            <input 
+                                type="number" 
+                                step="0.0001" 
+                                id="manualAUD" 
+                                placeholder="AUD"
+                                aria-describedby="manualHint"
+                            />
+                            <span class="manual-cur">AUD</span>
+                        </div>
+
+                        <button 
+                            class="btn-primary wide" 
+                            id="saveManualBtn"
+                            aria-describedby="manualHint"
+                        >
+                            Save Manual Rates
+                        </button>
+
+                        <div id="manualHint" class="field-hint" style="margin-top:0.5rem;">
+                            Saves locally and locks calculator to this snapshot.
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- ================= ARBITRAGE CALCULATOR ================= -->
+            <section 
+                class="glass-card panel" 
+                aria-labelledby="calcTitle"
+                role="region"
+            >
+                <h2 id="calcTitle" class="panel-title">Arbitrage Calculator (2 outcomes)</h2>
+
+                <!-- MODE TOGGLE -->
+                <div 
+                    class="note-box mode-box" 
+                    role="radiogroup" 
+                    aria-labelledby="modeLabel"
+                >
+                    <h3 id="modeLabel" class="sr-only">Select calculation mode</h3>
+                    
+                    <div class="mode-option">
+                        <label class="mode-label" for="modeStakeA">
+                            <input 
+                                type="radio" 
+                                name="calcMode" 
+                                value="stakeA" 
+                                id="modeStakeA" 
+                                checked
+                                aria-describedby="modeStakeADesc"
+                            />
+                            <div>
+                                <div class="mode-title">I know Stake A</div>
+                                <div id="modeStakeADesc" class="mode-desc">
+                                    I enter Stake A. You solve Stake B to equalize outcome.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mode-option">
+                        <label class="mode-label" for="modeStakeB">
+                            <input 
+                                type="radio" 
+                                name="calcMode" 
+                                value="stakeB" 
+                                id="modeStakeB"
+                                aria-describedby="modeStakeBDesc"
+                            />
+                            <div>
+                                <div class="mode-title">I know Stake B</div>
+                                <div id="modeStakeBDesc" class="mode-desc">
+                                    I enter Stake B. You solve Stake A to equalize outcome.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mode-option">
+                        <label class="mode-label" for="modeTargetEUR">
+                            <input 
+                                type="radio" 
+                                name="calcMode" 
+                                value="targetEUR" 
+                                id="modeTargetEUR"
+                                aria-describedby="modeTargetEURDesc"
+                            />
+                            <div>
+                                <div class="mode-title">I want guaranteed EUR payout</div>
+                                <div id="modeTargetEURDesc" class="mode-desc">
+                                    I enter a Target EUR return. You solve both stakes.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                </div>
+
+                <!-- CALC FORM -->
+                <form id="calcForm" class="calc-form" aria-labelledby="calcFormLabel">
+                    <h3 id="calcFormLabel" class="sr-only">Enter arbitrage parameters</h3>
+
+                    <!-- ROW A (Bookmaker A) -->
+                    <fieldset class="h-row">
+                        <legend class="sr-only">Bookmaker A parameters</legend>
+                        <div class="field slim">
+                            <label for="oddsA">Odds A</label>
+                            <input 
+                                type="number" 
+                                step="0.0001" 
+                                id="oddsA" 
+                                placeholder="e.g. 1.53" 
+                                required 
+                                aria-describedby="oddsAHint"
+                                min="1.0001"
+                            />
+                            <div id="oddsAHint" class="tiny-hint-line">
+                                Decimal odds, must be > 1.00
+                            </div>
+                        </div>
+
+                        <div class="field slim">
+                            <label for="currencyA">Curr A</label>
+                            <select id="currencyA" aria-describedby="currencyAHint">
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="RON">RON</option>
+                                <option value="AUD">AUD</option>
+                            </select>
+                            <div id="currencyAHint" class="tiny-hint-line">
+                                Currency for Stake A
+                            </div>
+                        </div>
+
+                        <div class="field slim">
+                            <label for="stakeA">Stake A</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                id="stakeA" 
+                                placeholder="e.g. 100"
+                                aria-describedby="stakeAHint"
+                                min="0.01"
+                            />
+                            <div id="stakeAHint" class="tiny-hint-line">
+                                Used in "I know Stake A" mode
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- ROW B (Bookmaker B) -->
+                    <fieldset class="h-row">
+                        <legend class="sr-only">Bookmaker B parameters</legend>
+                        <div class="field slim">
+                            <label for="oddsB">Odds B</label>
+                            <input 
+                                type="number" 
+                                step="0.0001" 
+                                id="oddsB" 
+                                placeholder="e.g. 2.80" 
+                                required 
+                                aria-describedby="oddsBHint"
+                                min="1.0001"
+                            />
+                            <div id="oddsBHint" class="tiny-hint-line">
+                                Decimal odds, must be > 1.00
+                            </div>
+                        </div>
+
+                        <div class="field slim">
+                            <label for="currencyB">Curr B</label>
+                            <select id="currencyB" aria-describedby="currencyBHint">
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="RON">RON</option>
+                                <option value="AUD">AUD</option>
+                            </select>
+                            <div id="currencyBHint" class="tiny-hint-line">
+                                Currency for Stake B
+                            </div>
+                        </div>
+
+                        <div class="field slim">
+                            <label for="stakeB">Stake B</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                id="stakeB" 
+                                placeholder="e.g. 80"
+                                aria-describedby="stakeBHint"
+                                min="0.01"
+                            />
+                            <div id="stakeBHint" class="tiny-hint-line">
+                                Used in "I know Stake B" mode
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- ROW C (Target EUR payout) -->
+                    <fieldset class="h-row">
+                        <legend class="sr-only">Target payout parameters</legend>
+                        <div class="field slim">
+                            <label for="targetPayout">Target guaranteed payout in EUR</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                id="targetPayout" 
+                                placeholder="e.g. 200"
+                                aria-describedby="targetPayoutHint"
+                                min="0.01"
+                            />
+                            <div id="targetPayoutHint" class="tiny-hint-line">
+                                Used in "I want guaranteed EUR payout" mode
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="calc-btn-row">
+                        <button 
+                            class="btn-primary" 
+                            id="calcBtn"
+                            type="submit"
+                        >
+                            Calculate
+                        </button>
+                    </div>
+                </form>
+
+                <div 
+                    id="calcError" 
+                    class="error-msg hidden" 
+                    role="alert" 
+                    aria-live="assertive"
+                    aria-atomic="true"
+                ></div>
+
+                <!-- RESULTS -->
+                <div 
+                    id="calcResult" 
+                    class="result-card hidden" 
+                    role="region" 
+                    aria-labelledby="resultTitle"
+                    aria-live="polite"
+                >
+                    <h3 id="resultTitle">Stake Plan</h3>
+
+                    <div class="result-flex">
+                        <div class="result-col">
+                            <div class="result-row">
+                                <span class="result-label">Stake A:</span>
+                                <span class="result-value" id="stakeAOut">-</span>
+                            </div>
+                            <div class="result-row">
+                                <span class="result-label">Stake B:</span>
+                                <span class="result-value" id="stakeBOut">-</span>
+                            </div>
+                        </div>
+
+                        <div class="result-col">
+                            <div class="result-row">
+                                <span class="result-label">If A wins → EUR:</span>
+                                <span class="result-value" id="payoutAOut">-</span>
+                            </div>
+                            <div class="result-row">
+                                <span class="result-label">If B wins → EUR:</span>
+                                <span class="result-value" id="payoutBOut">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="result-flex">
+                        <div class="result-col">
+                            <div class="result-row">
+                                <span class="result-label">Exposure (EUR):</span>
+                                <span class="result-value" id="exposureOut">-</span>
+                            </div>
+                            <div class="result-row">
+                                <span class="result-label">Guaranteed return (EUR):</span>
+                                <span class="result-value highlight" id="returnOut">-</span>
+                            </div>
+                        </div>
+                        <div class="result-col">
+                            <div class="result-row">
+                                <span class="result-label">Profit (EUR):</span>
+                                <span class="result-value highlight" id="profitOut">-</span>
+                            </div>
+                            <div class="result-row">
+                                <span class="result-label">ROI %:</span>
+                                <span class="result-value highlight" id="roiOut">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="result-row">
+                        <span class="result-label">Arbitrage Check:</span>
+                        <span class="result-value" id="arbOut" aria-live="polite">-</span>
+                    </div>
+
+                    <div class="tiny-hint">
+                        "Arbitrage Check" uses (1/oddsA + 1/oddsB). If < 1 it's a surebet.
+                        All EUR numbers are converted using today's FX snapshot.
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer-card glass-card" role="contentinfo">
+            <div class="foot-left">
+                <strong>Local operator use only.</strong>
+                One human. One machine.
+            </div>
+            <div class="foot-right">
+                Snap FX → Size bets → Log EUR profit → Settle later.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Screen reader only class -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+
+    <script>
+        /****************************************************
+         * GLOBAL STATE
+         ****************************************************/
+        let fxRates = null;
+        let fxTimestamp = null;
+        const RATES_STORAGE_KEY = "surebet_fx_snapshot_v1";
+
+        const $ = (sel) => document.querySelector(sel);
+        function setText(sel, txt) {
+            const el = $(sel);
+            if (el) el.textContent = txt;
+        }
+        function show(el) { el.classList.remove("hidden"); }
+        function hide(el) { el.classList.add("hidden"); }
+
+        /****************************************************
+         * STORAGE / LOCK
+         ****************************************************/
+        function loadRatesFromStorage() {
+            try {
+                const raw = localStorage.getItem(RATES_STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (!parsed || !parsed.rates || !parsed.timestamp) return;
+
+                fxRates = parsed.rates;
+                fxTimestamp = parsed.timestamp;
+
+                renderFxSnapshot();
+                lockFetchBtnIfNeeded();
+            } catch (err) {
+                console.error("Failed to load rates from storage:", err);
+                // Silently fail - user will need to fetch or enter manually
+            }
+        }
+
+        function saveRatesToStorage() {
+            if (!fxRates || !fxTimestamp) return;
+            const payload = {
+                rates: fxRates,
+                timestamp: fxTimestamp,
+            };
+            try {
+                localStorage.setItem(RATES_STORAGE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.error("Failed to save rates to storage:", err);
+                // Notify user but don't block functionality
+                const status = $("#fetchStatus");
+                status.textContent = "Warning: Could not save to local storage.";
+                status.classList.remove("good");
+                status.classList.add("bad");
+            }
+        }
+
+        function msSince(ts) { return Date.now() - ts; }
+        function isWithin24h(ts) {
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+            return msSince(ts) < ONE_DAY_MS;
+        }
+
+        function lockFetchBtnIfNeeded() {
+            const btn = $("#fetchRatesBtn");
+            const status = $("#fetchStatus");
+
+            if (fxTimestamp && isWithin24h(fxTimestamp)) {
+                btn.disabled = true;
+                status.textContent = "Using cached rates (<24h).";
+                status.classList.remove("bad");
+                status.classList.add("good");
+            } else {
+                btn.disabled = false;
+                status.textContent = "You can fetch fresh rates.";
+                status.classList.remove("bad");
+                status.classList.add("good");
+            }
+        }
+
+        /****************************************************
+         * FETCH RATES from Frankfurter
+         ****************************************************/
+        async function fetchRates() {
+            const btn = $("#fetchRatesBtn");
+            const status = $("#fetchStatus");
+
+            if (fxTimestamp && isWithin24h(fxTimestamp)) {
+                status.textContent = "Already fetched in the last 24h.";
+                status.classList.remove("bad");
+                status.classList.add("good");
+                btn.disabled = true;
+                return;
+            }
+
+            btn.disabled = true;
+            status.textContent = "Fetching...";
+            status.classList.remove("good", "bad");
+
+            try {
+                const url = "https://api.frankfurter.dev/v1/latest?symbols=GBP,RON,AUD";
+                const res = await fetch(url);
+                if (!res.ok) {
+                    throw new Error("HTTP " + res.status + " " + res.statusText);
+                }
+
+                const data = await res.json();
+                console.log("DEBUG raw API response:", data);
+
+                const rawRates = data.rates || {};
+                const newRates = {
+                    "EUR": 1.0,
+                    "GBP": Number(rawRates["GBP"] || 0),
+                    "RON": Number(rawRates["RON"] || 0),
+                    "AUD": Number(rawRates["AUD"] || 0),
+                };
+
+                console.log("DEBUG normalized rates:", newRates);
+
+                fxRates = newRates;
+                fxTimestamp = Date.now();
+                saveRatesToStorage();
+                renderFxSnapshot();
+
+                const missing = [];
+                for (const c of ["EUR", "GBP", "RON", "AUD"]) {
+                    if (!newRates[c] || newRates[c] === 0) {
+                        missing.push(c);
+                    }
+                }
+
+                if (missing.length > 0) {
+                    status.textContent =
+                        "Partial rates (missing " + missing.join(", ") + ").";
+                    status.classList.remove("good");
+                    status.classList.add("bad");
+                } else {
+                    status.textContent = "Rates updated.";
+                    status.classList.remove("bad");
+                    status.classList.add("good");
+                }
+            } catch (err) {
+                console.error("Rate fetch failed:", err);
+                status.textContent = "ERROR. Use manual override.";
+                status.classList.remove("good");
+                status.classList.add("bad");
+
+                if (!fxTimestamp) {
+                    btn.disabled = false;
+                }
+            }
+
+            lockFetchBtnIfNeeded();
+        }
+
+        /****************************************************
+         * MANUAL RATES
+         ****************************************************/
+        function saveManualRates() {
+            const gbpVal = parseFloat($("#manualGBP").value);
+            const ronVal = parseFloat($("#manualRON").value);
+            const audVal = parseFloat($("#manualAUD").value);
+
+            const status = $("#fetchStatus");
+
+            if (!(gbpVal > 0 && ronVal > 0 && audVal > 0)) {
+                status.textContent = "All manual rates must be > 0.";
+                status.classList.remove("good");
+                status.classList.add("bad");
+                return;
+            }
+
+            fxRates = {
+                "EUR": 1.0,
+                "GBP": gbpVal,
+                "RON": ronVal,
+                "AUD": audVal,
+            };
+            fxTimestamp = Date.now();
+            saveRatesToStorage();
+            renderFxSnapshot();
+            lockFetchBtnIfNeeded();
+
+            status.textContent = "Manual rates saved.";
+            status.classList.remove("bad");
+            status.classList.add("good");
+        }
+
+        /****************************************************
+         * RENDER FX SNAPSHOT (semantic table)
+         ****************************************************/
+        function renderFxSnapshot() {
+            const tsEl = $("#fxTimestamp");
+            const tbl = $("#fxTable");
+
+            if (!fxRates) {
+                tsEl.textContent = "No rates loaded";
+                tbl.innerHTML = "";
+                return;
+            }
+
+            const tsStr = new Date(fxTimestamp).toLocaleString();
+            tsEl.textContent = tsStr + " (EUR base)";
+
+            const safe = (val) =>
+                val && Number(val) > 0 ? Number(val).toFixed(4) : "—";
+
+            // Render as semantic HTML table for accessibility
+            tbl.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Currency</th>
+                            <th scope="col">Rate (1 EUR =)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fx-cur">EUR</td>
+                            <td class="fx-val">1.0000</td>
+                        </tr>
+                        <tr>
+                            <td class="fx-cur">GBP</td>
+                            <td class="fx-val">${safe(fxRates.GBP)}</td>
+                        </tr>
+                        <tr>
+                            <td class="fx-cur">RON</td>
+                            <td class="fx-val">${safe(fxRates.RON)}</td>
+                        </tr>
+                        <tr>
+                            <td class="fx-cur">AUD</td>
+                            <td class="fx-val">${safe(fxRates.AUD)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        /****************************************************
+         * FX HELPERS
+         ****************************************************/
+        function amountToEUR(amount, currency) {
+            if (!fxRates) throw new Error("No FX rates loaded");
+            if (!fxRates[currency]) throw new Error("Unsupported currency " + currency);
+            return amount / fxRates[currency];
+        }
+        function amountFromEUR(amountEUR, currency) {
+            if (!fxRates[currency]) throw new Error("Unsupported currency " + currency);
+            return amountEUR * fxRates[currency];
+        }
+
+        /****************************************************
+         * ARB CHECK
+         ****************************************************/
+        function arbAnalysis(oddsA, oddsB) {
+            const invSum = (1 / oddsA) + (1 / oddsB);
+            const hasArb = invSum < 1;
+            theReturnFactor = 1 / invSum;
+            const arbPct = (theReturnFactor - 1) * 100;
+            return { hasArb, arbPct };
+        }
+
+        /****************************************************
+         * MODE 1: I KNOW STAKE A
+         * - user inputs stakeA_native
+         * - we solve stakeB_native so that payout EUR matches
+         ****************************************************/
+        function solveFromStakeA(oddsA, oddsB, stakeA_native, curA, curB) {
+            // Payout if A wins, in A currency:
+            const payoutA_native = stakeA_native * oddsA;
+            // Convert that payout to EUR:
+            const payoutA_EUR = amountToEUR(payoutA_native, curA);
+
+            // We want B to pay out the same EUR if B wins.
+            // Convert that same EUR payout back into B currency:
+            const payoutA_in_B_native = amountFromEUR(payoutA_EUR, curB);
+
+            // stakeB_native * oddsB = payoutA_in_B_native
+            const stakeB_native = payoutA_in_B_native / oddsB;
+
+            // Now compute the rest using these two stakes:
+            return summarizeStakes(
+                oddsA,
+                oddsB,
+                stakeA_native,
+                stakeB_native,
+                curA,
+                curB
+            );
+        }
+
+        /****************************************************
+         * MODE 2: I KNOW STAKE B
+         * - user inputs stakeB_native
+         * - we solve stakeA_native symmetrically
+         ****************************************************/
+        function solveFromStakeB(oddsA, oddsB, stakeB_native, curA, curB) {
+            // Payout if B wins, in B currency:
+            const payoutB_native = stakeB_native * oddsB;
+            // Convert to EUR:
+            const payoutB_EUR = amountToEUR(payoutB_native, curB);
+
+            // Force A to pay that same EUR if A wins:
+            const payoutB_in_A_native = amountFromEUR(payoutB_EUR, curA);
+
+            // stakeA_native * oddsA = payoutB_in_A_native
+            const stakeA_native = payoutB_in_A_native / oddsA;
+
+            return summarizeStakes(
+                oddsA,
+                oddsB,
+                stakeA_native,
+                stakeB_native,
+                curA,
+                curB
+            );
+        }
+
+        /****************************************************
+         * MODE 3: TARGET EUR PAYOUT
+         * - user inputs targetPayoutEUR
+         * - solve *both* stakes so that if either side wins,
+         *   payout in EUR ≈ targetPayoutEUR
+         ****************************************************/
+        function solveFromTargetEUR(oddsA, oddsB, targetPayoutEUR, curA, curB) {
+            if (!fxRates || !fxRates[curA] || !fxRates[curB]) {
+                throw new Error("FX not ready or currency unsupported.");
+            }
+
+            const stakeA_native = (targetPayoutEUR * fxRates[curA]) / oddsA;
+            const stakeB_native = (targetPayoutEUR * fxRates[curB]) / oddsB;
+
+            return summarizeStakes(
+                oddsA,
+                oddsB,
+                stakeA_native,
+                stakeB_native,
+                curA,
+                curB,
+                targetPayoutEUR // we already know guaranteed EUR in this mode
+            );
+        }
+
+        /****************************************************
+         * COMMON SUMMARY:
+         * given both stakes, compute:
+         *  - payouts in EUR for A win vs B win
+         *  - exposure in EUR
+         *  - guaranteedReturnEUR = min(payoutA_EUR, payoutB_EUR)
+         *  - profit, ROI
+         ****************************************************/
+        function summarizeStakes(
+            oddsA,
+            oddsB,
+            stakeA_native,
+            stakeB_native,
+            curA,
+            curB,
+            overrideGuaranteedEUR // optional (used in targetEUR mode)
+        ) {
+            // native payouts
+            const payoutA_native = stakeA_native * oddsA;
+            const payoutB_native = stakeB_native * oddsB;
+
+            // EUR payouts
+            const payoutA_EUR = amountToEUR(payoutA_native, curA);
+            const payoutB_EUR = amountToEUR(payoutB_native, curB);
+
+            // stakes in EUR (exposure)
+            const stakeA_EUR = amountToEUR(stakeA_native, curA);
+            const stakeB_EUR = amountToEUR(stakeB_native, curB);
+            const exposureEUR = stakeA_EUR + stakeB_EUR;
+
+            // guaranteed EUR return:
+            const guaranteedReturnEUR =
+                overrideGuaranteedEUR !== undefined
+                    ? overrideGuaranteedEUR
+                    : Math.min(payoutA_EUR, payoutB_EUR);
+
+            const profitEUR = guaranteedReturnEUR - exposureEUR;
+            const roiPct = (profitEUR / exposureEUR) * 100;
+
+            return {
+                stakeA_native,
+                stakeB_native,
+                payoutA_EUR,
+                payoutB_EUR,
+                exposureEUR,
+                guaranteedReturnEUR,
+                profitEUR,
+                roiPct,
+            };
+        }
+
+        /****************************************************
+         * CALCULATE HANDLER
+         ****************************************************/
+        function onCalculate(e) {
+            e.preventDefault();
+
+            const errBox = $("#calcError");
+            const resultBox = $("#calcResult");
+            hide(errBox);
+
+            // Inputs
+            const oddsA = parseFloat($("#oddsA").value);
+            const oddsB = parseFloat($("#oddsB").value);
+
+            const curA = $("#currencyA").value;
+            const curB = $("#currencyB").value;
+
+            const stakeAVal = parseFloat($("#stakeA").value); // may be NaN if blank
+            const stakeBVal = parseFloat($("#stakeB").value); // may be NaN if blank
+
+            const targetPayoutVal = parseFloat($("#targetPayout").value); // may be NaN if blank
+
+            const mode = $("#modeStakeA").checked
+                ? "stakeA"
+                : $("#modeStakeB").checked
+                    ? "stakeB"
+                    : "targetEUR";
+
+            // basic validation
+            if (!fxRates) {
+                errBox.textContent =
+                    "No FX snapshot loaded. Fetch or enter manual rates first.";
+                show(errBox);
+                hide(resultBox);
+                return;
+            }
+            if (!(oddsA > 1 && oddsB > 1)) {
+                errBox.textContent = "Odds must be > 1.00";
+                show(errBox);
+                hide(resultBox);
+                return;
+            }
+
+            let calcRes;
+            try {
+                if (mode === "stakeA") {
+                    if (!(stakeAVal > 0)) {
+                        throw new Error("Stake A must be > 0 in 'I know Stake A' mode.");
+                    }
+                    calcRes = solveFromStakeA(
+                        oddsA,
+                        oddsB,
+                        stakeAVal,
+                        curA,
+                        curB
+                    );
+                } else if (mode === "stakeB") {
+                    if (!(stakeBVal > 0)) {
+                        throw new Error("Stake B must be > 0 in 'I know Stake B' mode.");
+                    }
+                    calcRes = solveFromStakeB(
+                        oddsA,
+                        oddsB,
+                        stakeBVal,
+                        curA,
+                        curB
+                    );
+                } else {
+                    if (!(targetPayoutVal > 0)) {
+                        throw new Error(
+                            "Target EUR must be > 0 in 'guaranteed EUR payout' mode."
+                        );
+                    }
+                    calcRes = solveFromTargetEUR(
+                        oddsA,
+                        oddsB,
+                        targetPayoutVal,
+                        curA,
+                        curB
+                    );
+                }
+            } catch (err) {
+                errBox.textContent = err.message || String(err);
+                show(errBox);
+                hide(resultBox);
+                return;
+            }
+
+            // Arbitrage check
+            const { hasArb, arbPct } = arbAnalysis(oddsA, oddsB);
+
+            // Render to UI
+            setText(
+                "#stakeAOut",
+                `${calcRes.stakeA_native.toFixed(2)} ${curA} @ ${oddsA.toFixed(2)}`
+            );
+            setText(
+                "#stakeBOut",
+                `${calcRes.stakeB_native.toFixed(2)} ${curB} @ ${oddsB.toFixed(2)}`
+            );
+
+            setText("#payoutAOut", `${calcRes.payoutA_EUR.toFixed(2)} EUR`);
+            setText("#payoutBOut", `${calcRes.payoutB_EUR.toFixed(2)} EUR`);
+
+            setText("#exposureOut", `${calcRes.exposureEUR.toFixed(2)} EUR`);
+            setText(
+                "#returnOut",
+                `${calcRes.guaranteedReturnEUR.toFixed(2)} EUR`
+            );
+            setText("#profitOut", `${calcRes.profitEUR.toFixed(2)} EUR`);
+            setText("#roiOut", `${calcRes.roiPct.toFixed(2)} %`);
+
+            if (hasArb) {
+                setText("#arbOut", `ARB ✅  +${arbPct.toFixed(2)}%`);
+            } else {
+                setText("#arbOut", `NO ARB ❌  ${arbPct.toFixed(2)}%`);
+            }
+
+            show(resultBox);
+        }
+
+        /****************************************************
+         * MODE UI (radio highlight)
+         ****************************************************/
+        function refreshModeUI() {
+            const stakeAOption = document.querySelector('.mode-option:nth-of-type(1)');
+            const stakeBOption = document.querySelector('.mode-option:nth-of-type(2)');
+            const targetEUROption = document.querySelector('.mode-option:nth-of-type(3)');
+
+            if ($("#modeStakeA").checked) {
+                stakeAOption.classList.add("active");
+                stakeBOption.classList.remove("active");
+                targetEUROption.classList.remove("active");
+            } else if ($("#modeStakeB").checked) {
+                stakeBOption.classList.add("active");
+                stakeAOption.classList.remove("active");
+                targetEUROption.classList.remove("active");
+            } else {
+                targetEUROption.classList.add("active");
+                stakeAOption.classList.remove("active");
+                stakeBOption.classList.remove("active");
+            }
+        }
+
+        /****************************************************
+         * KEYBOARD NAVIGATION ENHANCEMENTS
+         ****************************************************/
+        function setupKeyboardNavigation() {
+            // Handle Enter key on radio buttons to trigger mode selection
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Focus management for details element
+            const details = document.querySelector('.manual-wrapper');
+            if (details) {
+                details.addEventListener('toggle', (e) => {
+                    const summary = details.querySelector('.manual-summary');
+                    if (details.open) {
+                        summary.setAttribute('aria-expanded', 'true');
+                        // Focus first input when opening
+                        setTimeout(() => {
+                            const firstInput = details.querySelector('input');
+                            if (firstInput) firstInput.focus();
+                        }, 100);
+                    } else {
+                        summary.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        }
+
+        /****************************************************
+         * INIT
+         ****************************************************/
+        function init() {
+            $("#fetchRatesBtn").addEventListener("click", fetchRates);
+            $("#calcBtn").addEventListener("click", onCalculate);
+
+            const manualBtn = $("#saveManualBtn");
+            if (manualBtn) {
+                manualBtn.addEventListener("click", saveManualRates);
+            }
+
+            // radio visual sync for 3 modes
+            $("#modeStakeA").addEventListener("change", refreshModeUI);
+            $("#modeStakeB").addEventListener("change", refreshModeUI);
+            $("#modeTargetEUR").addEventListener("change", refreshModeUI);
+            refreshModeUI();
+
+            // Setup keyboard navigation
+            setupKeyboardNavigation();
+
+            // Load saved rates
+            loadRatesFromStorage();
+            lockFetchBtnIfNeeded();
+            renderFxSnapshot();
+        }
+
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+
+</html>
