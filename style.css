@@ -795,6 +795,36 @@ select {
   margin-top: var(--space-2);
 }
 
+/* Budget Row - Distinct styling for total budget mode */
+.budget-row {
+  background: linear-gradient(135deg, 
+    rgba(93, 255, 168, 0.05) 0%, 
+    rgba(0, 240, 255, 0.03) 100%);
+  border-color: rgba(93, 255, 168, 0.25);
+  position: relative;
+}
+
+.budget-row::before {
+  content: '💰';
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  opacity: 0.6;
+  transition: all var(--transition-base);
+}
+
+.budget-row:hover::before {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.budget-row:hover {
+  border-color: var(--color-accent-secondary);
+  box-shadow: var(--shadow-md), var(--shadow-glow-success);
+}
+
 /* ========================================
    MODE SELECTION
    ======================================== */

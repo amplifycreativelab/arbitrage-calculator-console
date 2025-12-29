@@ -4,25 +4,28 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Arbitrage calculator for 2-way betting with live EUR FX rate conversion. Calculate optimal stakes, exposure, and guaranteed returns across multiple currencies." />
+    <meta name="description"
+        content="Arbitrage calculator for 2-way betting with live EUR FX rate conversion. Calculate optimal stakes, exposure, and guaranteed returns across multiple currencies." />
     <title>Surebet Ops Console | Arbitrage Calculator</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
     <link rel="apple-touch-icon" href="favicon.png" />
     <meta name="theme-color" content="#0a0f1f" />
-    
+
     <!-- Preload fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap"
+        rel="stylesheet" />
 
 </head>
 
 <body>
     <!-- Skip to main content link for keyboard users -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    
+
     <div class="app-shell">
         <!-- HEADER -->
         <header class="header-card glass-card" role="banner">
@@ -31,33 +34,19 @@
                 <p class="tagline">2-way arbitrage sizing with live EUR FX snapshot</p>
             </div>
             <div class="fx-fetch-block" role="region" aria-label="FX Rate Controls">
-                <button 
-                    id="fetchRatesBtn" 
-                    class="btn-primary"
-                    aria-describedby="fetchHint fetchStatus"
-                >
+                <button id="fetchRatesBtn" class="btn-primary" aria-describedby="fetchHint fetchStatus">
                     Fetch Rates (EUR base)
                 </button>
                 <div id="fetchHint" class="fetch-hint">
                     Snapshot once per 24h for accounting.
                 </div>
-                <div 
-                    id="fetchStatus" 
-                    class="status-msg" 
-                    role="status" 
-                    aria-live="polite"
-                    aria-atomic="true"
-                ></div>
+                <div id="fetchStatus" class="status-msg" role="status" aria-live="polite" aria-atomic="true"></div>
             </div>
         </header>
 
         <main id="main-content" class="main-col" role="main">
             <!-- ================= FX SNAPSHOT (SEMANTIC TABLE) ================= -->
-            <section 
-                class="glass-card panel panel-compact" 
-                aria-labelledby="fxTitle"
-                role="region"
-            >
+            <section class="glass-card panel panel-compact" aria-labelledby="fxTitle" role="region">
                 <div class="panel-head-row">
                     <h2 id="fxTitle" class="panel-title small-gap">FX Snapshot (EUR →)</h2>
                     <div id="fxTimestamp" class="fx-timestamp tiny-ts" aria-live="polite">No rates loaded</div>
@@ -68,10 +57,7 @@
                 </div>
 
                 <details class="manual-wrapper">
-                    <summary 
-                        class="manual-summary"
-                        aria-expanded="false"
-                    >
+                    <summary class="manual-summary" aria-expanded="false">
                         Manual rates override
                         <span class="manual-hint">(use if API blocked)</span>
                     </summary>
@@ -79,43 +65,24 @@
                     <div class="inline-manual" role="form" aria-label="Manual FX rate entry">
                         <div class="manual-row tight-row">
                             <label for="manualGBP">1€ =</label>
-                            <input 
-                                type="number" 
-                                step="0.0001" 
-                                id="manualGBP" 
-                                placeholder="GBP"
-                                aria-describedby="manualHint"
-                            />
+                            <input type="number" step="0.0001" id="manualGBP" placeholder="GBP"
+                                aria-describedby="manualHint" />
                             <span class="manual-cur">GBP</span>
                         </div>
                         <div class="manual-row tight-row">
                             <label for="manualRON">1€ =</label>
-                            <input 
-                                type="number" 
-                                step="0.0001" 
-                                id="manualRON" 
-                                placeholder="RON"
-                                aria-describedby="manualHint"
-                            />
+                            <input type="number" step="0.0001" id="manualRON" placeholder="RON"
+                                aria-describedby="manualHint" />
                             <span class="manual-cur">RON</span>
                         </div>
                         <div class="manual-row tight-row">
                             <label for="manualAUD">1€ =</label>
-                            <input 
-                                type="number" 
-                                step="0.0001" 
-                                id="manualAUD" 
-                                placeholder="AUD"
-                                aria-describedby="manualHint"
-                            />
+                            <input type="number" step="0.0001" id="manualAUD" placeholder="AUD"
+                                aria-describedby="manualHint" />
                             <span class="manual-cur">AUD</span>
                         </div>
 
-                        <button 
-                            class="btn-primary wide" 
-                            id="saveManualBtn"
-                            aria-describedby="manualHint"
-                        >
+                        <button class="btn-primary wide" id="saveManualBtn" aria-describedby="manualHint">
                             Save Manual Rates
                         </button>
 
@@ -127,31 +94,17 @@
             </section>
 
             <!-- ================= ARBITRAGE CALCULATOR ================= -->
-            <section 
-                class="glass-card panel" 
-                aria-labelledby="calcTitle"
-                role="region"
-            >
+            <section class="glass-card panel" aria-labelledby="calcTitle" role="region">
                 <h2 id="calcTitle" class="panel-title">Arbitrage Calculator (2 outcomes)</h2>
 
                 <!-- MODE TOGGLE -->
-                <div 
-                    class="note-box mode-box" 
-                    role="radiogroup" 
-                    aria-labelledby="modeLabel"
-                >
+                <div class="note-box mode-box" role="radiogroup" aria-labelledby="modeLabel">
                     <h3 id="modeLabel" class="sr-only">Select calculation mode</h3>
-                    
+
                     <div class="mode-option">
                         <label class="mode-label" for="modeStakeA">
-                            <input 
-                                type="radio" 
-                                name="calcMode" 
-                                value="stakeA" 
-                                id="modeStakeA" 
-                                checked
-                                aria-describedby="modeStakeADesc"
-                            />
+                            <input type="radio" name="calcMode" value="stakeA" id="modeStakeA" checked
+                                aria-describedby="modeStakeADesc" />
                             <div>
                                 <div class="mode-title">I know Stake A</div>
                                 <div id="modeStakeADesc" class="mode-desc">
@@ -163,13 +116,8 @@
 
                     <div class="mode-option">
                         <label class="mode-label" for="modeStakeB">
-                            <input 
-                                type="radio" 
-                                name="calcMode" 
-                                value="stakeB" 
-                                id="modeStakeB"
-                                aria-describedby="modeStakeBDesc"
-                            />
+                            <input type="radio" name="calcMode" value="stakeB" id="modeStakeB"
+                                aria-describedby="modeStakeBDesc" />
                             <div>
                                 <div class="mode-title">I know Stake B</div>
                                 <div id="modeStakeBDesc" class="mode-desc">
@@ -181,17 +129,25 @@
 
                     <div class="mode-option">
                         <label class="mode-label" for="modeTargetEUR">
-                            <input 
-                                type="radio" 
-                                name="calcMode" 
-                                value="targetEUR" 
-                                id="modeTargetEUR"
-                                aria-describedby="modeTargetEURDesc"
-                            />
+                            <input type="radio" name="calcMode" value="targetEUR" id="modeTargetEUR"
+                                aria-describedby="modeTargetEURDesc" />
                             <div>
                                 <div class="mode-title">I want guaranteed EUR payout</div>
                                 <div id="modeTargetEURDesc" class="mode-desc">
                                     I enter a Target EUR return. You solve both stakes.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mode-option">
+                        <label class="mode-label" for="modeTotalBudget">
+                            <input type="radio" name="calcMode" value="totalBudget" id="modeTotalBudget"
+                                aria-describedby="modeTotalBudgetDesc" />
+                            <div>
+                                <div class="mode-title">I have a total budget</div>
+                                <div id="modeTotalBudgetDesc" class="mode-desc">
+                                    I enter total investment amount. You split it optimally between stakes.
                                 </div>
                             </div>
                         </label>
@@ -208,15 +164,8 @@
                         <legend class="sr-only">Bookmaker A parameters</legend>
                         <div class="field slim">
                             <label for="oddsA">Odds A</label>
-                            <input 
-                                type="number" 
-                                step="0.0001" 
-                                id="oddsA" 
-                                placeholder="e.g. 1.53" 
-                                required 
-                                aria-describedby="oddsAHint"
-                                min="1.0001"
-                            />
+                            <input type="number" step="0.0001" id="oddsA" placeholder="e.g. 1.53" required
+                                aria-describedby="oddsAHint" min="1.0001" />
                             <div id="oddsAHint" class="tiny-hint-line">
                                 Decimal odds, must be > 1.00
                             </div>
@@ -237,14 +186,8 @@
 
                         <div class="field slim">
                             <label for="stakeA">Stake A</label>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                id="stakeA" 
-                                placeholder="e.g. 100"
-                                aria-describedby="stakeAHint"
-                                min="0.01"
-                            />
+                            <input type="number" step="0.01" id="stakeA" placeholder="e.g. 100"
+                                aria-describedby="stakeAHint" min="0.01" />
                             <div id="stakeAHint" class="tiny-hint-line">
                                 Used in "I know Stake A" mode
                             </div>
@@ -256,15 +199,8 @@
                         <legend class="sr-only">Bookmaker B parameters</legend>
                         <div class="field slim">
                             <label for="oddsB">Odds B</label>
-                            <input 
-                                type="number" 
-                                step="0.0001" 
-                                id="oddsB" 
-                                placeholder="e.g. 2.80" 
-                                required 
-                                aria-describedby="oddsBHint"
-                                min="1.0001"
-                            />
+                            <input type="number" step="0.0001" id="oddsB" placeholder="e.g. 2.80" required
+                                aria-describedby="oddsBHint" min="1.0001" />
                             <div id="oddsBHint" class="tiny-hint-line">
                                 Decimal odds, must be > 1.00
                             </div>
@@ -285,14 +221,8 @@
 
                         <div class="field slim">
                             <label for="stakeB">Stake B</label>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                id="stakeB" 
-                                placeholder="e.g. 80"
-                                aria-describedby="stakeBHint"
-                                min="0.01"
-                            />
+                            <input type="number" step="0.01" id="stakeB" placeholder="e.g. 80"
+                                aria-describedby="stakeBHint" min="0.01" />
                             <div id="stakeBHint" class="tiny-hint-line">
                                 Used in "I know Stake B" mode
                             </div>
@@ -304,47 +234,53 @@
                         <legend class="sr-only">Target payout parameters</legend>
                         <div class="field slim">
                             <label for="targetPayout">Target guaranteed payout in EUR</label>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                id="targetPayout" 
-                                placeholder="e.g. 200"
-                                aria-describedby="targetPayoutHint"
-                                min="0.01"
-                            />
+                            <input type="number" step="0.01" id="targetPayout" placeholder="e.g. 200"
+                                aria-describedby="targetPayoutHint" min="0.01" />
                             <div id="targetPayoutHint" class="tiny-hint-line">
                                 Used in "I want guaranteed EUR payout" mode
                             </div>
                         </div>
                     </fieldset>
 
+                    <!-- ROW D (Total Budget) -->
+                    <fieldset class="h-row budget-row">
+                        <legend class="sr-only">Total budget parameters</legend>
+                        <div class="field slim">
+                            <label for="totalBudget">Total Investment Amount</label>
+                            <input type="number" step="0.01" id="totalBudget" placeholder="e.g. 500"
+                                aria-describedby="totalBudgetHint" min="0.01" />
+                            <div id="totalBudgetHint" class="tiny-hint-line">
+                                Total amount you want to invest across both bets
+                            </div>
+                        </div>
+                        <div class="field slim">
+                            <label for="budgetCurrency">Budget Currency</label>
+                            <select id="budgetCurrency" aria-describedby="budgetCurrencyHint">
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="RON">RON</option>
+                                <option value="AUD">AUD</option>
+                            </select>
+                            <div id="budgetCurrencyHint" class="tiny-hint-line">
+                                Currency of your total budget
+                            </div>
+                        </div>
+                    </fieldset>
+
+
                     <div class="calc-btn-row">
-                        <button 
-                            class="btn-primary" 
-                            id="calcBtn"
-                            type="submit"
-                        >
+                        <button class="btn-primary" id="calcBtn" type="submit">
                             Calculate
                         </button>
                     </div>
                 </form>
 
-                <div 
-                    id="calcError" 
-                    class="error-msg hidden" 
-                    role="alert" 
-                    aria-live="assertive"
-                    aria-atomic="true"
-                ></div>
+                <div id="calcError" class="error-msg hidden" role="alert" aria-live="assertive" aria-atomic="true">
+                </div>
 
                 <!-- RESULTS -->
-                <div 
-                    id="calcResult" 
-                    class="result-card hidden" 
-                    role="region" 
-                    aria-labelledby="resultTitle"
-                    aria-live="polite"
-                >
+                <div id="calcResult" class="result-card hidden" role="region" aria-labelledby="resultTitle"
+                    aria-live="polite">
                     <h3 id="resultTitle">Stake Plan</h3>
 
                     <div class="result-flex">
@@ -404,17 +340,16 @@
                     </div>
 
                     <div class="tiny-hint">
-                        "Arbitrage Check" uses (1/oddsA + 1/oddsB). If < 1 it's a surebet.
-                        All EUR numbers are converted using today's FX snapshot.
+                        "Arbitrage Check" uses (1/oddsA + 1/oddsB). If < 1 it's a surebet. All EUR numbers are converted
+                            using today's FX snapshot. </div>
                     </div>
-                </div>
             </section>
         </main>
 
         <footer class="footer-card glass-card" role="contentinfo">
             <div class="foot-left">
                 <strong>Arbitrage Calculator</strong>
-                
+
             </div>
             <div class="foot-right">
                 Made by Stefano Mocci.
@@ -779,6 +714,49 @@
         }
 
         /****************************************************
+         * MODE 4: I HAVE A TOTAL BUDGET
+         * - user inputs totalBudget in a chosen currency
+         * - we optimally split it between stakeA and stakeB
+         *   using proportional stakes: stake_i ∝ (1/odds_i)
+         *   This ensures equal payouts (in EUR) whichever outcome wins.
+         ****************************************************/
+        function solveFromTotalBudget(oddsA, oddsB, totalBudget, budgetCurrency, curA, curB) {
+            if (!fxRates || !fxRates[budgetCurrency] || !fxRates[curA] || !fxRates[curB]) {
+                throw new Error("FX not ready or currency unsupported.");
+            }
+
+            // Convert total budget to EUR first
+            const totalBudgetEUR = amountToEUR(totalBudget, budgetCurrency);
+
+            // For a perfect arbitrage split where payout is equalized:
+            // We need stakeA_EUR and stakeB_EUR such that:
+            //   stakeA_EUR + stakeB_EUR = totalBudgetEUR
+            //   stakeA_EUR * oddsA = stakeB_EUR * oddsB  (equal EUR payouts)
+            //
+            // From the second equation: stakeB_EUR = stakeA_EUR * (oddsA / oddsB)
+            // Substituting: stakeA_EUR + stakeA_EUR * (oddsA / oddsB) = totalBudgetEUR
+            //               stakeA_EUR * (1 + oddsA/oddsB) = totalBudgetEUR
+            //               stakeA_EUR = totalBudgetEUR / (1 + oddsA/oddsB)
+            //               stakeA_EUR = totalBudgetEUR * oddsB / (oddsA + oddsB)
+
+            const stakeA_EUR = (totalBudgetEUR * oddsB) / (oddsA + oddsB);
+            const stakeB_EUR = totalBudgetEUR - stakeA_EUR;
+
+            // Convert EUR stakes to native currencies
+            const stakeA_native = amountFromEUR(stakeA_EUR, curA);
+            const stakeB_native = amountFromEUR(stakeB_EUR, curB);
+
+            return summarizeStakes(
+                oddsA,
+                oddsB,
+                stakeA_native,
+                stakeB_native,
+                curA,
+                curB
+            );
+        }
+
+        /****************************************************
          * COMMON SUMMARY:
          * given both stakes, compute:
          *  - payouts in EUR for A win vs B win
@@ -850,12 +828,16 @@
             const stakeBVal = parseFloat($("#stakeB").value); // may be NaN if blank
 
             const targetPayoutVal = parseFloat($("#targetPayout").value); // may be NaN if blank
+            const totalBudgetVal = parseFloat($("#totalBudget").value); // may be NaN if blank
+            const budgetCurrency = $("#budgetCurrency").value;
 
             const mode = $("#modeStakeA").checked
                 ? "stakeA"
                 : $("#modeStakeB").checked
                     ? "stakeB"
-                    : "targetEUR";
+                    : $("#modeTargetEUR").checked
+                        ? "targetEUR"
+                        : "totalBudget";
 
             // basic validation
             if (!fxRates) {
@@ -896,7 +878,7 @@
                         curA,
                         curB
                     );
-                } else {
+                } else if (mode === "targetEUR") {
                     if (!(targetPayoutVal > 0)) {
                         throw new Error(
                             "Target EUR must be > 0 in 'guaranteed EUR payout' mode."
@@ -906,6 +888,21 @@
                         oddsA,
                         oddsB,
                         targetPayoutVal,
+                        curA,
+                        curB
+                    );
+                } else {
+                    // mode === "totalBudget"
+                    if (!(totalBudgetVal > 0)) {
+                        throw new Error(
+                            "Total Budget must be > 0 in 'I have a total budget' mode."
+                        );
+                    }
+                    calcRes = solveFromTotalBudget(
+                        oddsA,
+                        oddsB,
+                        totalBudgetVal,
+                        budgetCurrency,
                         curA,
                         curB
                     );
@@ -957,19 +954,23 @@
             const stakeAOption = document.querySelector('.mode-option:nth-of-type(1)');
             const stakeBOption = document.querySelector('.mode-option:nth-of-type(2)');
             const targetEUROption = document.querySelector('.mode-option:nth-of-type(3)');
+            const totalBudgetOption = document.querySelector('.mode-option:nth-of-type(4)');
 
+            // Remove all active states first
+            stakeAOption.classList.remove("active");
+            stakeBOption.classList.remove("active");
+            targetEUROption.classList.remove("active");
+            totalBudgetOption.classList.remove("active");
+
+            // Add active to the selected one
             if ($("#modeStakeA").checked) {
                 stakeAOption.classList.add("active");
-                stakeBOption.classList.remove("active");
-                targetEUROption.classList.remove("active");
             } else if ($("#modeStakeB").checked) {
                 stakeBOption.classList.add("active");
-                stakeAOption.classList.remove("active");
-                targetEUROption.classList.remove("active");
-            } else {
+            } else if ($("#modeTargetEUR").checked) {
                 targetEUROption.classList.add("active");
-                stakeAOption.classList.remove("active");
-                stakeBOption.classList.remove("active");
+            } else if ($("#modeTotalBudget").checked) {
+                totalBudgetOption.classList.add("active");
             }
         }
 
@@ -1019,10 +1020,11 @@
                 manualBtn.addEventListener("click", saveManualRates);
             }
 
-            // radio visual sync for 3 modes
+            // radio visual sync for 4 modes
             $("#modeStakeA").addEventListener("change", refreshModeUI);
             $("#modeStakeB").addEventListener("change", refreshModeUI);
             $("#modeTargetEUR").addEventListener("change", refreshModeUI);
+            $("#modeTotalBudget").addEventListener("change", refreshModeUI);
             refreshModeUI();
 
             // Setup keyboard navigation
